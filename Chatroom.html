@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatroom with Roles</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark-mode {
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+    }
+    #chat-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .dark-mode #chat-container {
+      background: #2e2e2e;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    .dark-mode #messages {
+      background: #333;
+      border-color: #555;
+    }
+    #message-input {
+      display: flex;
+      margin-top: 10px;
+    }
+    #message-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    .dark-mode #message-input input {
+      background: #444;
+      border-color: #555;
+      color: #f5f5f5;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .dark-mode button {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Chatroom</h2>
+    <div id="login">
+      <label for="username">Enter your name:</label>
+      <input type="text" id="username" placeholder="Your name">
+      <label for="key">Enter your key:</label>
+      <input type="text" id="key" placeholder="Your key (e.g., Owner)">
+      <button onclick="joinChat()">Join</button>
+    </div>
+    <div id="chat" style="display: none;">
+      <h3 id="welcome"></h3>
+      <div id="messages"></div>
+      <div id="message-input">
+        <input type="text" id="message" placeholder="Type your message">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+  </div>
+
+  <script>
+    // Role system with keys
+    const roles = {
+      Owner: "You are the chat Owner.",
+      "Epic Man": "You have Epic privileges!",
+      Alpha: "You are a regular user."
+    };
+
+    let userRole = '';
+    let username = '';
+
+    // Simulated chat messages (to be replaced with backend later)
+    const messages = [];
+
+    function joinChat() {
+      username = document.getElementById('username').value;
+      const key = document.getElementById('key').value;
+
+      if (!username.trim()) {
+        alert('Please enter your name.');
+        return;
+      }
+      if (!roles[key]) {
+        alert('Invalid key. Use: Owner, Epic Man, or Alpha.');
+        return;
+      }
+
+      userRole = key;
+      document.getElementById('welcome').innerText = `Welcome, ${username}! ${roles[userRole]}`;
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('chat').style.display = 'block';
+
+      renderMessages();
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('message').value;
+      if (!message.trim()) return;
+
+      const roleBadge = userRole === "Owner" ? "[⭐Owner]" :
+                        userRole === "Epic Man" ? "[🔥Epic]" : "[Alpha]";
+      messages.push(`${roleBadge} ${username}: ${message}`);
+      document.getElementById('message').value = '';
+
+      renderMessages();
+    }
+
+    function renderMessages() {
+      const messagesContainer = document.getElementById('messages');
+      messagesContainer.innerHTML = messages.map(msg => `<div>${msg}</div>`).join('');
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+  </script>
+</body>
+</html>
