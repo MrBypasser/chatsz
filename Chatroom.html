@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatroom with Roles</title>
+  <title>Enhanced Chatroom</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -74,13 +74,13 @@
 </head>
 <body>
   <div id="chat-container">
-    <h2>Chatroom</h2>
+    <h2>Enhanced Chatroom</h2>
     <div id="login">
       <label for="username">Enter your name:</label>
       <input type="text" id="username" placeholder="Your name">
-      <label for="key">Enter your key:</label>
-      <input type="text" id="key" placeholder="Your key (e.g., Owner)">
-      <button onclick="joinChat()">Join</button>
+      <label for="key">Key (Optional):</label>
+      <input type="text" id="key" placeholder="Enter role key">
+      <button onclick="createAccount()">Create Account</button>
     </div>
     <div id="chat" style="display: none;">
       <h3 id="welcome"></h3>
@@ -89,39 +89,43 @@
         <input type="text" id="message" placeholder="Type your message">
         <button onclick="sendMessage()">Send</button>
       </div>
+      <div>
+        <button onclick="openSettings()">Settings</button>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+      </div>
     </div>
-    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
   </div>
 
   <script>
-    // Role system with keys
     const roles = {
-      Owner: "You are the chat Owner.",
-      "Epic Man": "You have Epic privileges!",
-      Alpha: "You are a regular user."
+      "3Ja9Nss2": "Owner",
+      "EpicKey123": "Epic Man",
+      "AlphaKey789": "Alpha"
     };
 
-    let userRole = '';
-    let username = '';
+    let currentUser = {
+      name: '',
+      role: 'Guest',
+      mutedUntil: null,
+    };
 
-    // Simulated chat messages (to be replaced with backend later)
+    const users = [];
     const messages = [];
 
-    function joinChat() {
-      username = document.getElementById('username').value;
-      const key = document.getElementById('key').value;
+    function createAccount() {
+      const name = document.getElementById('username').value.trim();
+      const key = document.getElementById('key').value.trim();
 
-      if (!username.trim()) {
+      if (!name) {
         alert('Please enter your name.');
         return;
       }
-      if (!roles[key]) {
-        alert('Invalid key. Use: Owner, Epic Man, or Alpha.');
-        return;
-      }
 
-      userRole = key;
-      document.getElementById('welcome').innerText = `Welcome, ${username}! ${roles[userRole]}`;
+      const role = roles[key] || 'Guest';
+      currentUser = { name, role, mutedUntil: null };
+      users.push(currentUser);
+
+      document.getElementById('welcome').innerText = `Welcome, ${name}! Role: ${role}`;
       document.getElementById('login').style.display = 'none';
       document.getElementById('chat').style.display = 'block';
 
@@ -129,12 +133,15 @@
     }
 
     function sendMessage() {
-      const message = document.getElementById('message').value;
-      if (!message.trim()) return;
+      if (currentUser.mutedUntil && new Date() < new Date(currentUser.mutedUntil)) {
+        alert('You are muted.');
+        return;
+      }
 
-      const roleBadge = userRole === "Owner" ? "[⭐Owner]" :
-                        userRole === "Epic Man" ? "[🔥Epic]" : "[Alpha]";
-      messages.push(`${roleBadge} ${username}: ${message}`);
+      const message = document.getElementById('message').value.trim();
+      if (!message) return;
+
+      messages.push(`${currentUser.name} (${currentUser.role}): ${message}`);
       document.getElementById('message').value = '';
 
       renderMessages();
@@ -148,6 +155,61 @@
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
+    }
+
+    function openSettings() {
+      const newKey = prompt('Enter a role key to upgrade your account:');
+      if (roles[newKey]) {
+        currentUser.role = roles[newKey];
+        alert(`Role updated to: ${currentUser.role}`);
+        document.getElementById('welcome').innerText = `Welcome, ${currentUser.name}! Role: ${currentUser.role}`;
+      } else {
+        alert('Invalid key.');
+      }
+    }
+
+    function muteUser() {
+      if (currentUser.role !== 'Owner') {
+        alert('Only the Owner can mute users.');
+        return;
+      }
+
+      const targetUser = prompt('Enter the name of the user to mute:');
+      const muteDuration = prompt('Enter mute duration (e.g., 10S, 5M, 1H):');
+      const user = users.find(u => u.name === targetUser);
+
+      if (!user) {
+        alert('User not found.');
+        return;
+      }
+
+      const duration = parseMuteDuration(muteDuration);
+      if (!duration) {
+        alert('Invalid duration.');
+        return;
+      }
+
+      user.mutedUntil = new Date(Date.now() + duration).toISOString();
+      alert(`${user.name} has been muted for ${muteDuration}.`);
+    }
+
+    function parseMuteDuration(duration) {
+      const match = duration.match(/^(\d+)([SMHDWM])$/i);
+      if (!match) return null;
+
+      const value = parseInt(match[1]);
+      const unit = match[2].toUpperCase();
+
+      const multipliers = {
+        S: 1000,
+        M: 60000,
+        H: 3600000,
+        D: 86400000,
+        W: 604800000,
+        M: 2592000000,
+      };
+
+      return value * multipliers[unit] || null;
     }
   </script>
 </body>
